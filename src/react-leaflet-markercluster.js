@@ -7,6 +7,17 @@ import 'leaflet.markercluster';
 
 import './style.scss';
 
+function createDelayedExecutor(task, validation) {
+  const internalLooper = setInterval(() => {
+    if (validation()) {
+      task();
+      clearInterval(internalLooper);
+    }
+  }, 50);
+
+  return internalLooper;
+}
+
 export default class MarkerClusterGroup extends LayerGroup {
 
   componentWillMount() {
@@ -17,12 +28,14 @@ export default class MarkerClusterGroup extends LayerGroup {
       this.addLayersWithMarkersFromProps(this.props.markers);
     }
 
-    this.props.wrapperOptions.enableDefaultStyle && (
-      this.context.map._container.className += ' marker-cluster-styled'
+    this.props.wrapperOptions.enableDefaultStyle && createDelayedExecutor(
+      () => { this.context.map._container.className += ' marker-cluster-styled' },
+      () => typeof window !== 'undefined' && this.context && this.context.map && this.context.map._container
     );
 
-    !this.props.wrapperOptions.disableDefaultAnimation && (
-      this.context.map._container.className += ' marker-cluster-animated'
+    !this.props.wrapperOptions.disableDefaultAnimation && createDelayedExecutor(
+      () => { this.context.map._container.className += ' marker-cluster-animated' },
+      () => typeof window !== 'undefined' && this.context && this.context.map && this.context.map._container
     );
 
     // Init listeners for markerClusterGroup leafletElement only once
